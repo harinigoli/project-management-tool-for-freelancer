@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freelancer Project Management Tool</title>
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color:lightblue;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            background-color: red;
+            color: lightblue;
+        }
+        h2 {
+            text-align: center;
+            background-color: lightcoral;
+            color: lightblue;
+        }
+        nav {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            height: 30px;
+            background-color: lawngreen;
+            color: lightblue;
+        }
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            justify-content: space-evenly;
+        }
+        nav ul li {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .project-section {
+            margin-bottom: 30px;
+        }
+        .project-section h2 {
+            margin-bottom: 10px;
+        }
+        .task-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .task-list li {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            margin-right: 5px;
+        }
+        .edit-btn {
+            background-color: #28a745;
+            margin-right: 5px;
+        }
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 5px;
+            width: 80%;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Freelancer Project Management Tool</h1>
+            <nav>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Projects</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <section class="project-section">
+            <h2>Projects</h2>
+            <form id="project-form">
+                <input type="text" id="project-name" placeholder="Enter project name" required>
+                <button type="submit">Add Project</button>
+            </form>
+            <ul id="project-list" class="project-list"></ul>
+        </section>
+
+        <section class="project-section">
+            <h2>Tasks</h2>
+            <form id="task-form">
+                <input type="text" id="task-name" placeholder="Enter task name" required>
+                <button type="submit">Add Task</button>
+            </form>
+            <ul id="task-list" class="task-list"></ul>
+        </section>
+    </div>
+
+    <!-- Modal for project details -->
+    <div id="project-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Project Details</h2>
+            <p>This is where project details will be displayed.</p>
+        </div>
+    </div>
+
+    <!-- Modal for editing project or task -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit Item</h2>
+            <input type="text" id="edit-input" placeholder="Edit name">
+            <button id="save-btn">Save</button>
+        </div>
+    </div>
+
+    <script>
+        const projectForm = document.getElementById('project-form');
+        const projectNameInput = document.getElementById('project-name');
+        const projectList = document.getElementById('project-list');
+        const taskForm = document.getElementById('task-form');
+        const taskNameInput = document.getElementById('task-name');
+        const taskList = document.getElementById('task-list');
+        const projectModal = document.getElementById('project-modal');
+        const editModal = document.getElementById('edit-modal');
+        const closeButton = document.querySelectorAll('.close');
+        const editInput = document.getElementById('edit-input');
+        const saveButton = document.getElementById('save-btn');
+
+        projectForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const projectName = projectNameInput.value.trim();
+            if (projectName !== '') {
+                addProject(projectName);
+                projectNameInput.value = '';
+            }
+        });
+
+        taskForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const taskName = taskNameInput.value.trim();
+            if (taskName !== '') {
+                addTask(taskName);
+                taskNameInput.value = '';
+            }
+        });
+
+        function addProject(projectName) {
+            const li = document.createElement('li');
+            li.textContent = projectName;
+            li.innerHTML += '<button class="edit-btn" onclick="editItem(this)">Edit</button>';
+            li             .innerHTML += '<button class="delete-btn" onclick="deleteItem(this)">Delete</button>';
+            li.innerHTML += '<button class="details-btn" onclick="showProjectDetails()">Details</button>';
+            projectList.appendChild(li);
+        }
+
+        function addTask(taskName) {
+            const li = document.createElement('li');
+            li.textContent = taskName;
+            li.innerHTML += '<button class="edit-btn" onclick="editItem(this)">Edit</button>';
+            li.innerHTML += '<button class="delete-btn" onclick="deleteItem(this)">Delete</button>';
+            taskList.appendChild(li);
+        }
+
+        function deleteItem(button) {
+            const li = button.parentElement;
+            li.parentElement.removeChild(li);
+        }
+
+        function editItem(button) {
+            const li = button.parentElement;
+            const itemName = li.firstChild.textContent;
+            editInput.value = itemName;
+            saveButton.onclick = function() {
+                const updatedName = editInput.value.trim();
+                if (updatedName !== '') {
+                    li.firstChild.textContent = updatedName;
+                    closeEditModal();
+                }
+            }
+            editModal.style.display = "block";
+        }
+
+        function closeEditModal() {
+            editModal.style.display = "none";
+        }
+
+        function showProjectDetails() {
+            projectModal.style.display = "block";
+        }
+
+        closeButton.forEach(button => {
+            button.onclick = function() {
+                closeEditModal();
+                projectModal.style.display = "none";
+            }
+        });
+
+        window.onclick = function(event) {
+            if (event.target == editModal) {
+                closeEditModal();
+            }
+            if (event.target == projectModal) {
+                projectModal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
+
